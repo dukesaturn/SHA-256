@@ -51,6 +51,9 @@ The interactive shell shows each step of the algorithm:
 
 ## Testing
 
+## Docs
+
+Here can you see the original NIST [paper](docs/nist.fips.180-4.pdf)
 
 ## License
 
