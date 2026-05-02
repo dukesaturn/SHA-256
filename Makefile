@@ -1,7 +1,7 @@
 CC = gcc
 WD = src
 BD = build
-TARGET = sha
+TARGET = sha256
 CFLAGS = -Wall 
 
 ifdef DEBUG
