@@ -53,7 +53,7 @@ The interactive shell shows each step of the algorithm:
 
 ## Docs
 
-Here can you see the original NIST [paper](docs/nist.fips.180-4.pdf)
+Here you can see the original NIST [paper](docs/nist.fips.180-4.pdf)
 
 ## License
 
