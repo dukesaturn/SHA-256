@@ -27,7 +27,7 @@ make
 # c0535e4be2b79ffd93291305436bf889314e4a3faec05ecffcbb7df31ad9e51a
 ```
 
-## Interactive debugging
+## Debugging
 
 Compile with debug mode enabled:
 
@@ -35,17 +35,6 @@ Compile with debug mode enabled:
 make DEBUG=1
 ```
 
-The interactive shell shows each step of the algorithm:
-
-![Block expansion](assets/1.png)
-
-**Each block — original and expanded:**
-
-![Block detail](assets/2.png)
-
-**Compression rounds:**
-
-![Compression rounds](assets/3.png)
 
 ---
 
