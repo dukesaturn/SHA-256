@@ -1,5 +1,6 @@
 #include "../src/sha-256.h"
 #include <math.h>
+#include <time.h>
 #include <stdlib.h>
 
 int main()

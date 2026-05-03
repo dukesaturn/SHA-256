@@ -4,8 +4,8 @@
  */
 
 #include <stdio.h>
-#include "src/debug.h"
 #include "src/sha-256.h"
+#include <stdlib.h>
 
 int main(int argc, char **argv)
 {
@@ -20,5 +20,6 @@ int main(int argc, char **argv)
 
     if (sha256(input, strlen(input), result))
         puts(result);
-
+    
+    return EXIT_SUCCESS;
 }

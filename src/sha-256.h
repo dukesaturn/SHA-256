@@ -9,7 +9,6 @@
 #include <assert.h>
 #include <string.h>
 #include <limits.h>
-#include "debug.h"
 
 #define H_LEN 8
 #define K_LEN 64

@@ -16,15 +16,12 @@ static int isPrime(uint32_t p)
 
 static void generatePrimes(int size, uint32_t *primes)
 {
-    phase("Generating primes\n");
-
     int j = 0;
 
     for (int i = 2; j != size; i++)
     {
         if (isPrime(i))
         {
-            logDebug("Generated prime n.%d is %d!\n", j, i);
             primes[j++] = i;
         }
     }
@@ -41,27 +38,22 @@ static void generatePrimes(int size, uint32_t *primes)
  * @param rootFuncName: The target function selected name for logging.
  * @param func: Target function pointer
  */
-static uint32_t generateConstant(unsigned int p, char *rootFuncName, rootFuncPtr func)
+static uint32_t generateConstant(unsigned int p, rootFuncPtr func)
 {
-    logDebug(BOLD("Generating costant from %d\n"), p);
-
     double sqrt_p = func(p);
     double integralPart = 0;
     double modf_p = modf(sqrt_p, &integralPart);
     long unsigned int res = (modf_p * pow(2, 32));
 
-    logDebug("\t\t\t↪ 0x%lx ✔\n", res);
     return res;
 }
 
-static void generateConstants(const uint32_t *primes, uint32_t *dest, size_t size, char *rootFuncName, rootFuncPtr func)
+static void generateConstants(const uint32_t *primes, uint32_t *dest, size_t size, rootFuncPtr func)
 {
-    phase("Generating costants\n");
-
     for (int i = 0; i < size; i++)
     {
         int p = primes[i];
-        dest[i] = generateConstant(p, rootFuncName, func);
+        dest[i] = generateConstant(p, func);
     }
 }
 
@@ -149,7 +141,6 @@ static void generateWords(unsigned char *buff, int counter, int size, uint32_t *
 {
     memcpy(words, buff, BLOCK_SIZE_BYTES);
     convertInBigEndian(words);
-    logBlock(buff, counter, size);
 }
 
 /**
@@ -166,7 +157,6 @@ static void generateExpandedWords(int counter, uint32_t *src, uint32_t *dest)
     {
         dest[i] = dest[i - 16] + sigma0(dest[i - 15]) + dest[i - 7] + sigma1(dest[i - 2]);
     }
-    logExpandendWordBlock(dest, counter);
 }
 
 static void compressionRounds(uint32_t *H, uint32_t *K, uint32_t *expandedWords)
@@ -198,7 +188,6 @@ static void compressionRounds(uint32_t *H, uint32_t *K, uint32_t *expandedWords)
         c = b;
         b = a;
         a = T1 + T2;
-        logRound(T1, T2, a, b, c, d, e, f, g, h, i);
     }
 
     H[0] += a;
@@ -209,8 +198,6 @@ static void compressionRounds(uint32_t *H, uint32_t *K, uint32_t *expandedWords)
     H[5] += f;
     H[6] += g;
     H[7] += h;
-
-    logH(H);
 }
 
 /**
@@ -227,8 +214,8 @@ int sha256(const char *input, long int messageSize, char *result)
      * are generated, I preferred to generate them dynamically.
      */
     generatePrimes(PRIMES_LEN, primes);
-    generateConstants(primes, H, H_LEN, "sqrt", sqrt);
-    generateConstants(primes, K, K_LEN, "cbrt", cbrt);
+    generateConstants(primes, H, H_LEN, sqrt);
+    generateConstants(primes, K, K_LEN, cbrt);
 
     /** +9 = 1 byte (0x80 padding bit) + 8 bytes (64-bit message length) */
     long int nOfBlocks = ceil((float)(messageSize + 9) / (float)BLOCK_SIZE_BYTES);
@@ -254,8 +241,6 @@ int sha256(const char *input, long int messageSize, char *result)
 
     for (int i = 0; i < nOfBlocks; i++)
     {
-        phase("Read block n. %d\n", i);
-
         memcpy(buff, data + ((i * BLOCK_SIZE_BYTES)), BLOCK_SIZE_BYTES);
         /** 16 Words of 32-bit */
         generateWords(buff, i, paddedSize, words);
