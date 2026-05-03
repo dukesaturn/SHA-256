@@ -14,7 +14,6 @@ int main()
 
     char result[65] = {0};
 
-    puts("START");
     for (int i = 0; i < sizeof(blockSizePow) / sizeof(int); i++)
     {
         blockSize = (int)pow(2, blockSizePow[i]);
@@ -29,19 +28,19 @@ int main()
 
             end = clock();
             currentTimeExecution = (double)(end - start) / CLOCKS_PER_SEC;
+            counter++;
+
             if (currentTimeExecution >= 3)
             {
                 /** It's the Openssl format
-                 * 
+                 *
                  *  @code: openssl speed -evp sha256
                  */
                 printf("Doing sha256 ops for 3s on %d size blocks: %d sha256 ops in 2.98s\n", blockSize, counter);
                 break;
             }
-            counter++;
         }
 
         free(randomData);
     }
-    puts("END");
 }
