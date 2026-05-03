@@ -15,7 +15,6 @@ int main(int argc, char **argv)
         exit(EXIT_FAILURE);
     }
 
-    logo();
     char *input = argv[1];
     char result[65] = {0};
 
