@@ -5,7 +5,7 @@ static int isPrime(uint32_t p)
     if (p <= 1)
         return 0;
 
-    for (int i = p / 2; i > 1; i--)
+    for (int i = sqrt(p); i > 1; i--)
     {
         if (p % i == 0)
             return false;
@@ -213,7 +213,11 @@ static void compressionRounds(uint32_t *H, uint32_t *K, uint32_t *expandedWords)
     logH(H);
 }
 
-void sha256(const char *input, long int messageSize, char *result)
+/**
+ * Returns 0 if an error occurs,
+ * 1 if everything is ok.
+ */
+int sha256(const char *input, long int messageSize, char *result)
 {
     uint32_t primes[PRIMES_LEN], H[H_LEN], K[K_LEN];
 
@@ -235,6 +239,7 @@ void sha256(const char *input, long int messageSize, char *result)
     if (!data)
     {
         perror("Error with allocation");
+        return 0;
     }
 
     memset(data, 0, paddedSize);
@@ -261,4 +266,5 @@ void sha256(const char *input, long int messageSize, char *result)
 
     sprintf(result, "%08x%08x%08x%08x%08x%08x%08x%08x", H[0], H[1], H[2], H[3], H[4], H[5], H[6], H[7]);
     free(data);
+    return 1;
 }

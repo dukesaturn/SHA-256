@@ -24,6 +24,6 @@
 
 typedef double (*rootFuncPtr)(double);
 
-void sha256(const char *input, long int originalSize, char *result);
+int sha256(const char *input, long int originalSize, char *result);
 
 #endif
