@@ -5,21 +5,20 @@
 
 #include <stdio.h>
 #include "src/sha-256.h"
-#include <stdlib.h>
 
 int main(int argc, char **argv)
 {
     if (argc != 2)
     {
         puts("sha <string>");
-        exit(EXIT_FAILURE);
+        return 1;
     }
 
-    char *input = argv[1];
+    const char* input =  argv[1];
     char result[65] = {0};
 
-    if (sha256(input, strlen(input), result))
-        puts(result);
+    if (sha256(input,  strlen(input), result))
+        puts((char*)result);
     
-    return EXIT_SUCCESS;
+    return 0;
 }
