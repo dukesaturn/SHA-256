@@ -2,12 +2,13 @@
 #include <math.h>
 #include <time.h>
 #include <stdlib.h>
+#include <stdio.h>
 
 int main()
 {
     clock_t start, end;
 
-    int blockSizePow[] = {4, 6, 10, 13, 14};
+    int blockSizePow[] = {4, 6, 8, 10, 13, 14};
     int blockSize = 0;
     char *randomData = NULL;
     double currentTimeExecution;

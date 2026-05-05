@@ -2,7 +2,13 @@ CC = gcc
 WD = src
 BD = build
 TARGET = sha256
-CFLAGS = -Wall 
+
+CFLAGS += -MD -MP
+CFLAGS += $(WARNINGS)
+
+WARNINGS += -Wall -Wextra -Wwrite-strings
+WARNINGS += -Wpedantic -Warray-bounds -Wconversion
+WARNINGS += -Wstrict-prototypes
 
 ifdef DEBUG
 CFLAGS += -g 

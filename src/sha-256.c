@@ -1,65 +1,27 @@
 #include "sha-256.h"
+#include <math.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <stdint.h>
+#include <stdbool.h>
+#include <assert.h>
+#include <string.h>
+#include <limits.h>
 
-static int isPrime(uint32_t p)
-{
-    if (p <= 1)
-        return 0;
-
-    for (int i = sqrt(p); i > 1; i--)
-    {
-        if (p % i == 0)
-            return false;
-    }
-
-    return true;
-}
-
-static void generatePrimes(int size, uint32_t *primes)
-{
-    int j = 0;
-
-    for (int i = 2; j != size; i++)
-    {
-        if (isPrime(i))
-        {
-            primes[j++] = i;
-        }
-    }
-}
-
-/**
- * Generate a constant.
- *
- * Take $p$ and $r = \sqrt(p)$ (it would be also cbrt, just an example).
- * Now $fracPart = modf(r)$ and $fracPart * 2^{32}$
- * Now $C = floor(fracPart * 2^{32})$
- *
- * @param p: Prime number
- * @param rootFuncName: The target function selected name for logging.
- * @param func: Target function pointer
- */
-static uint32_t generateConstant(unsigned int p, rootFuncPtr func)
-{
-    double sqrt_p = func(p);
-    double integralPart = 0;
-    double modf_p = modf(sqrt_p, &integralPart);
-    long unsigned int res = (modf_p * pow(2, 32));
-
-    return res;
-}
-
-static void generateConstants(const uint32_t *primes, uint32_t *dest, size_t size, rootFuncPtr func)
-{
-    for (int i = 0; i < size; i++)
-    {
-        int p = primes[i];
-        dest[i] = generateConstant(p, func);
-    }
-}
+#define H_LEN 8
+#define K_LEN 64
+#define BLOCK_SIZE_BYTES 64
+#define PRIMES_LEN 64
+#define ROUNDS 64
+#define W_LEN 16
+#define EXP_W_LEN 64
+#define UINT32_BITS 32
+#define UCHAR_BITS 8
+#define BYTE_IN_BITS 8
 
 static void convertInBigEndian(uint32_t *block)
 {
-    for (int i = 0; i < 16; i++)
+    for (size_t i = 0; i < 16; i++)
     {
         if (__BYTE_ORDER == __LITTLE_ENDIAN)
         {
@@ -69,9 +31,16 @@ static void convertInBigEndian(uint32_t *block)
     }
 }
 
-static void setSizeInPadding(unsigned char *block, int size, int paddedSize)
+/**
+ * @brief Set as 1 the first bit after the end of the message and the size at the end of the last block.
+ *
+ * @note The size is represented by a 64bit integer.
+ */
+static void padding(unsigned char *block, size_t messageSize, size_t paddedSize)
 {
-    uint64_t l = size * 8;
+    block[messageSize] = 0x80;
+
+    uint64_t l = messageSize * 8;
 
     block[paddedSize - 1] = l & 0xFF;
     block[paddedSize - 2] = (l & 0xFF00) >> BYTE_IN_BITS;
@@ -79,81 +48,29 @@ static void setSizeInPadding(unsigned char *block, int size, int paddedSize)
     block[paddedSize - 4] = (l & 0xFF000000) >> (BYTE_IN_BITS * 3);
 }
 
-static uint32_t shr(size_t p, uint32_t x)
-{
-    return x >> p;
-}
-
-static uint32_t rotr(size_t p, uint32_t x)
-{
-    return (x >> p) | (x << (UINT32_BITS - p));
-}
-
-/**
- * $ \sigma_0(x) = \mathrm{ROTR}^7(x) \oplus \mathrm{ROTR}^{18}(x) \oplus \mathrm{SHR}^3(x) $
- */
-static uint32_t sigma0(uint32_t x)
-{
-    return rotr(7, x) ^ rotr(18, x) ^ shr(3, x);
-}
+#define shr(p, x) (x >> p)
+#define rotr(p, x) ((x >> p) | (x << (UINT32_BITS - p)))
+#define sigma0(x) (rotr(7, x) ^ rotr(18, x) ^ shr(3, x))
+#define sigma1(x) (rotr(17, x) ^ rotr(19, x) ^ shr(10, x))
+#define Sigma0(x) (rotr(2, x) ^ rotr(13, x) ^ rotr(22, x))
+#define Sigma1(x) (rotr(6, x) ^ rotr(11, x) ^ rotr(25, x))
+#define choose(e, f, g) ((e & f) ^ (~e & g))
+#define maj(a, b, c) ((a & b) ^ (a & c) ^ (b & c))
 
 /**
- * $ \sigma_1(x) = \mathrm{ROTR}^{17}(x) \oplus \mathrm{ROTR}^{19}(x) \oplus \mathrm{SHR}^{10}(x) $
- */
-static uint32_t sigma1(uint32_t x)
-{
-    return rotr(17, x) ^ rotr(19, x) ^ shr(10, x);
-}
-
-/**
- * $ \Sigma_0(x) = \mathrm{ROTR}^2(x) \oplus \mathrm{ROTR}^{13}(x) \oplus \mathrm{ROTR}^{22}(x) $
- */
-static uint32_t Sigma0(uint32_t x)
-{
-    return rotr(2, x) ^ rotr(13, x) ^ rotr(22, x);
-}
-
-/**
- * $ \Sigma_1(x) = \mathrm{ROTR}^6(x) \oplus \mathrm{ROTR}^{11}(x) \oplus \mathrm{ROTR}^{25}(x) $
- */
-static uint32_t Sigma1(uint32_t x)
-{
-    return rotr(6, x) ^ rotr(11, x) ^ rotr(25, x);
-}
-
-/**
- * $ \mathrm{Ch}(e,f,g) = (e \land f) \oplus (\neg e \land g) $
- */
-static uint32_t choose(uint32_t e, uint32_t f, uint32_t g)
-{
-    return (e & f) ^ (~e & g);
-}
-
-/**
- * $ \mathrm{Maj}(a,b,c) = (a \land b) \oplus (a \land c) \oplus (b \land c) $
- */
-static uint32_t maj(uint32_t a, uint32_t b, uint32_t c)
-{
-    return (a & b) ^ (a & c) ^ (b & c);
-}
-
-static void generateWords(unsigned char *buff, int counter, int size, uint32_t *words)
-{
-    memcpy(words, buff, BLOCK_SIZE_BYTES);
-    convertInBigEndian(words);
-}
-
-/**
+ * @brief Generate Words for a block
  *
+ * Copy the first 16 words from the current block.
  * After the 16th:
  *
  * $W[i] = W[i-16] + σ0(W[i-15]) + W[i-7] + σ1(W[i-2])$
  */
-static void generateExpandedWords(int counter, uint32_t *src, uint32_t *dest)
+static void generateWords(uint32_t *dest, unsigned char *src)
 {
     memcpy(dest, src, BLOCK_SIZE_BYTES);
+    convertInBigEndian(dest);
 
-    for (int i = W_LEN; i < EXP_W_LEN; i++)
+    for (size_t i = W_LEN; i < EXP_W_LEN; i++)
     {
         dest[i] = dest[i - 16] + sigma0(dest[i - 15]) + dest[i - 7] + sigma1(dest[i - 2]);
     }
@@ -170,7 +87,7 @@ static void compressionRounds(uint32_t *H, uint32_t *K, uint32_t *expandedWords)
     uint32_t g = H[6];
     uint32_t h = H[7];
 
-    for (int i = 0; i < ROUNDS; i++)
+    for (size_t i = 0; i < ROUNDS; i++)
     {
         /**
          * $T1 = h + Σ1(e) + Ch(e,f,g) + K[i] + W[i]$
@@ -201,55 +118,81 @@ static void compressionRounds(uint32_t *H, uint32_t *K, uint32_t *expandedWords)
 }
 
 /**
- * Returns 0 if an error occurs,
- * 1 if everything is ok.
+ * @note taken from https://github.com/Moridi/SHA-256/blob/master/sha256.cpp
  */
-int sha256(const char *input, long int messageSize, char *result)
+static uint32_t H[H_LEN] = {0x6a09e667,
+                            0xbb67ae85,
+                            0x3c6ef372,
+                            0xa54ff53a,
+                            0x510e527f,
+                            0x9b05688c,
+                            0x1f83d9ab,
+                            0x5be0cd19};
+
+static uint32_t K[K_LEN] = {0x428a2f98, 0x71374491, 0xb5c0fbcf, 0xe9b5dba5,
+                            0x3956c25b, 0x59f111f1, 0x923f82a4, 0xab1c5ed5,
+                            0xd807aa98, 0x12835b01, 0x243185be, 0x550c7dc3,
+                            0x72be5d74, 0x80deb1fe, 0x9bdc06a7, 0xc19bf174,
+                            0xe49b69c1, 0xefbe4786, 0x0fc19dc6, 0x240ca1cc,
+                            0x2de92c6f, 0x4a7484aa, 0x5cb0a9dc, 0x76f988da,
+                            0x983e5152, 0xa831c66d, 0xb00327c8, 0xbf597fc7,
+                            0xc6e00bf3, 0xd5a79147, 0x06ca6351, 0x14292967,
+                            0x27b70a85, 0x2e1b2138, 0x4d2c6dfc, 0x53380d13,
+                            0x650a7354, 0x766a0abb, 0x81c2c92e, 0x92722c85,
+                            0xa2bfe8a1, 0xa81a664b, 0xc24b8b70, 0xc76c51a3,
+                            0xd192e819, 0xd6990624, 0xf40e3585, 0x106aa070,
+                            0x19a4c116, 0x1e376c08, 0x2748774c, 0x34b0bcb5,
+                            0x391c0cb3, 0x4ed8aa4a, 0x5b9cca4f, 0x682e6ff3,
+                            0x748f82ee, 0x78a5636f, 0x84c87814, 0x8cc70208,
+                            0x90befffa, 0xa4506ceb, 0xbef9a3f7, 0xc67178f2};
+
+/**
+ * @brief Sha-256 algorithm.
+ *
+ * @param input
+ * @param messageSize
+ * @param result
+ *
+ * @return 1 if an error occurs,
+ * 0 if everything is ok.
+ *
+ * @note I've received suggestions about the SHA256 APIs form in many libraries.
+ * This implementations have an init function, calcultate function, and cleaning function
+ * - to ensure that every dimension input is possible processed -.
+ * With this approach I don't need to malloc the `input` data, and obvisously it there would more efficient.
+ *
+ */
+int sha256(const char *input, size_t messageSize, char *result)
 {
-    uint32_t primes[PRIMES_LEN], H[H_LEN], K[K_LEN];
-
-    /**
-     * @note: I know that in production pre-generated tables are adopted.
-     * But, for studying purposes and to understand how these constants
-     * are generated, I preferred to generate them dynamically.
-     */
-    generatePrimes(PRIMES_LEN, primes);
-    generateConstants(primes, H, H_LEN, sqrt);
-    generateConstants(primes, K, K_LEN, cbrt);
-
     /** +9 = 1 byte (0x80 padding bit) + 8 bytes (64-bit message length) */
-    long int nOfBlocks = ceil((float)(messageSize + 9) / (float)BLOCK_SIZE_BYTES);
-    long int paddedSize = nOfBlocks * BLOCK_SIZE_BYTES;
+    size_t nOfBlocks = (size_t)ceil((double)(messageSize + 9) / (double)BLOCK_SIZE_BYTES);
+    size_t paddedSize = nOfBlocks * BLOCK_SIZE_BYTES;
 
     unsigned char *data = (unsigned char *)malloc(paddedSize);
 
     if (!data)
     {
         perror("Error with allocation");
-        return 0;
+        return 1;
     }
 
-    memset(data, 0, paddedSize);
     memcpy(data, input, messageSize);
+    padding(data, messageSize, paddedSize);
 
-    data[messageSize] = 0x80;
-    setSizeInPadding(data, messageSize, paddedSize);
+    uint32_t words[EXP_W_LEN] = {0};
 
-    unsigned char buff[BLOCK_SIZE_BYTES] = {0};
-    uint32_t words[W_LEN] = {0};
-    uint32_t expandedWords[EXP_W_LEN] = {0};
-
-    for (int i = 0; i < nOfBlocks; i++)
+    for (size_t i = 0; i < nOfBlocks; i++)
     {
-        memcpy(buff, data + ((i * BLOCK_SIZE_BYTES)), BLOCK_SIZE_BYTES);
-        /** 16 Words of 32-bit */
-        generateWords(buff, i, paddedSize, words);
         /** 64 words of 32-bit: first 16 copied, remaining 48 generated */
-        generateExpandedWords(i, words, expandedWords);
-        compressionRounds(H, K, expandedWords);
+        generateWords(words, data);
+        compressionRounds(H, K, words);
     }
 
-    sprintf(result, "%08x%08x%08x%08x%08x%08x%08x%08x", H[0], H[1], H[2], H[3], H[4], H[5], H[6], H[7]);
+    for (size_t i = 0; i < 8; i++)
+    {
+        sprintf((char *)result + (i * 8), "%08x", H[i]);
+    }
+
     free(data);
-    return 1;
+    return 0;
 }

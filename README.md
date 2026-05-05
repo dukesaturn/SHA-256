@@ -1,10 +1,6 @@
 # SHA-256
 
-![Algorithm: SHA-256](https://img.shields.io/badge/Algorithm-SHA--256-0a0a0a?style=for-the-badge&logo=security&logoColor=white)
-![Platform: Linux](https://img.shields.io/badge/Platform-Linux-FCC624?style=for-the-badge&logo=linux&logoColor=black)
-![License: GPL-2.0](https://img.shields.io/badge/License-GPL--2.0-blue?style=for-the-badge)
-
-A C implementation of the SHA-256 hashing algorithm, developed by the NSA and standardized by NIST in 2001. Built as a learning exercise to study how hashing functions work internally.
+A C implementation of SHA-256 algorithm. 
 
 > **Not for production use**
 > This is a study project. Feel free to copy, edit, or learn from it.
@@ -38,12 +34,6 @@ make DEBUG=1
 
 ---
 
-## Testing
-
 ## Docs
 
 Here you can see the original NIST [paper](docs/nist.fips.180-4.pdf)
-
-## License
-
-Distributed under the [GPL-2.0 License](https://www.gnu.org/licenses/old-licenses/gpl-2.0.html).
