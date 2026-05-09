@@ -2,6 +2,7 @@
 #include <math.h>
 #include <time.h>
 #include <stdlib.h>
+#include <stdint.h>
 #include <stdio.h>
 
 int main()
@@ -10,11 +11,11 @@ int main()
 
     int blockSizePow[] = {4, 6, 8, 10, 13, 14};
     int blockSize = 0;
-    char *randomData = NULL;
+    uint8_t *randomData = NULL;
     double currentTimeExecution;
     int counter = 0;
 
-    char result[65] = {0};
+    uint32_t result[65] = {0};
 
     for (int i = 0; i < sizeof(blockSizePow) / sizeof(int); i++)
     {

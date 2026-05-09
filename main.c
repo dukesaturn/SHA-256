@@ -4,13 +4,21 @@
  */
 
 #include <stdio.h>
-#include "src/sha-256.h"
 #include <string.h>
 #include <stdlib.h>
 #include <errno.h>
+#include <stdint.h>
+#include "src/sha-256.h"
 
 #define PROGRAM "sha256"
 
+
+/**
+ * @note This program is just an example of the algorithm implementation, and handles
+ * only string inputs.
+ * 
+ * If you want to use it with binary data or files, implement by yourself in your program.
+ */
 int main(int argc, char **argv)
 {
     if (argc != 2)
@@ -19,11 +27,11 @@ int main(int argc, char **argv)
         return 1;
     }
 
-    const char *input = argv[1];
-    char result[65] = {0};
+    const uint8_t *msg = (uint8_t *)argv[1];
+    uint32_t digest[8] = {0};
 
-    if (!sha256(input, strlen(input), result))
-        puts((char *)result);
+    if (!sha256(msg, strlen(argv[1]), digest))
+        printDigest(digest);
     else
     {
         fprintf(stderr, "Error with %s: %s\n", PROGRAM, strerror(errno));
