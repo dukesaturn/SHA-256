@@ -5,3 +5,6 @@ sha256
 performance
 endianness
 nist
+sha256.d
+nist.d
+performance.d

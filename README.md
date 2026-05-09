@@ -31,9 +31,24 @@ Compile with debug mode enabled:
 make DEBUG=1
 ```
 
+## Performance Test
 
+Compile with this
+
+```bash
+make PERFORMANCE=1
+```
+
+## Nist Vectors Test
+
+Compile with this
+
+```bash
+make NIST=1
+```
 ---
 
 ## Docs
 
 Here you can see the original NIST [paper](docs/nist.fips.180-4.pdf)
+Here my optimization journey [optimization](docs/Optimization.md)

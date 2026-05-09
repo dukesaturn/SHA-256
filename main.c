@@ -17,7 +17,6 @@
  * @note This program is just an example of the algorithm implementation, and handles
  * only string inputs.
  * 
- * If you want to use it with binary data or files, implement by yourself in your program.
  */
 int main(int argc, char **argv)
 {

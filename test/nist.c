@@ -29,9 +29,9 @@ int main()
         }
 
         readHeader(rspFile);
-        size_t iterations = 32;
+        size_t L = 32;
 
-        for (size_t i = 0; i < iterations; i++)
+        for (size_t i = 0; i < L; i++)
         {
             /** Data taken from test */
             size_t len = 0;
@@ -44,7 +44,7 @@ int main()
             if (!sha256(msg, len / 8, digest))
             {
                 printDigest(digest);
-                printf("%s\n", MD);
+                printf("%s\n\n", MD);
             }
             else
             {
@@ -55,7 +55,7 @@ int main()
         }
         fclose(rspFile);
     }
-    
+
     return 0;
 }
 
@@ -129,6 +129,7 @@ void readHeader(FILE *f)
             printf("%s", buffer);
         }
     }
+    printf("\n");
 }
 /**
  * @brief Read a test from file

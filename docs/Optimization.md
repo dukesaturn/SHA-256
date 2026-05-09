@@ -115,3 +115,37 @@ Doing sha256 ops for 3s on 1024 size blocks: 418484 sha256 ops in 2.98s
 Doing sha256 ops for 3s on 8192 size blocks: 72165 sha256 ops in 2.98s
 Doing sha256 ops for 3s on 16384 size blocks: 34208 sha256 ops in 2.98s
 ```
+
+## Using static inline functions and compiling with -march=native
+
+I've converted the function in `inline` 
+
+```c
+static inline uint32_t rotr(uint32_t p, uint32_t x)
+{
+    return ((x >> p) | (x << (UINT32_BITS - p)));
+}
+```
+
+And this is the assembly
+
+```asm
+ror     esi, 5
+```
+
+Furthermore with this flag compilation
+
+```bash
+ gcc -O2 -march=native -o performance test/performance.c src/sha-256.c -lm
+```
+
+I've reached 
+
+```bash
+Doing sha256 ops for 3s on 16 size blocks: 1930468 sha256 ops in 2.98s
+Doing sha256 ops for 3s on 64 size blocks: 1676303 sha256 ops in 2.98s
+Doing sha256 ops for 3s on 256 size blocks: 1161771 sha256 ops in 2.98s
+Doing sha256 ops for 3s on 1024 size blocks: 515066 sha256 ops in 2.98s
+Doing sha256 ops for 3s on 8192 size blocks: 85940 sha256 ops in 2.98s
+Doing sha256 ops for 3s on 16384 size blocks: 43942 sha256 ops in 2.98s
+```
