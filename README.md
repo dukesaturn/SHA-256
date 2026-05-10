@@ -4,7 +4,7 @@ A C implementation of SHA-256 algorithm.
 
 > **Not for production use**
 > This is a study project. Feel free to copy, edit, or learn from it.
-
+>
 > **Dependency note**
 > This software uses GCC built-in functions and requires GCC to compile.
 
@@ -39,6 +39,12 @@ Compile with this
 make PERFORMANCE=1
 ```
 
+and run
+
+```bash
+./performance
+```
+
 ## Nist Vectors Test
 
 Compile with this
@@ -46,6 +52,11 @@ Compile with this
 ```bash
 make NIST=1
 ```
+
+```bash
+./nist
+```
+
 ---
 
 ## Docs

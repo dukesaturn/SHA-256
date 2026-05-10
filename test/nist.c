@@ -7,16 +7,18 @@
 #include <assert.h>
 
 #define BUFF_SIZE 600
+#define ROW_DATA_OFFSET 6
+#define HEADERS_ROWS 7
+#define TEST_BLOCK_ROWS 4
 
 void fromHexToByte(const char *src, size_t size, uint8_t *dest);
-char *getValueFromRow(char *src);
-void readHeader(FILE *f);
-void readTest(size_t *len, uint8_t *msg, char *MD, FILE *f);
+int readHeader(FILE *f);
+int readTest(size_t *len, uint8_t *msg, char *MD, FILE *f);
 
-int main()
+int main(void)
 {
     /** For SHA256 we have these tests */
-    char *filePaths[] = {"test/shavs/SHA256ShortMsg.rsp", "test/shavs/SHA256LongMsg.rsp"};
+    const char *filePaths[] = {"test/shavs/SHA256ShortMsg.rsp", "test/shavs/SHA256LongMsg.rsp"};
 
     for (size_t i = 0; i < 1; i++)
     {
@@ -24,27 +26,48 @@ int main()
 
         if (!rspFile)
         {
-            fprintf(stderr, "Error with %s: %s\n", filePaths[0], strerror(errno));
+            fprintf(stderr, "%s : %s\n", filePaths[i], strerror(errno));
             return 1;
         }
 
-        readHeader(rspFile);
+        if (readHeader(rspFile))
+        {
+            fprintf(stderr, "%s : %s", filePaths[i], strerror(errno));
+            return 1;
+        }
+
         size_t L = 32;
 
-        for (size_t i = 0; i < L; i++)
+        for (size_t j = 0; j < L; j++)
         {
-            /** Data taken from test */
+            /** Data taken from test
+             *
+             * @note Len is expressed in bits, but, in the implementation, the parameter is the amount of byte.
+             * So, in this case, we'll pass
+             *
+             * ```c
+             * len / 8;
+             *
+             *```
+             */
             size_t len = 0;
             uint8_t msg[BUFF_SIZE] = {0};
-            char MD[32] = {0};
-            readTest(&len, msg, MD, rspFile);
+            char MD[DGST_LENGTH] = {0};
+            if (readTest(&len, msg, MD, rspFile))
+            {
+                fprintf(stderr, "%s : %s", filePaths[i], strerror(errno));
+                return 1;
+            }
 
             uint32_t digest[8] = {0};
+            char digestHex[DGST_LENGTH] = {0};
 
             if (!sha256(msg, len / 8, digest))
             {
-                printDigest(digest);
-                printf("%s\n\n", MD);
+                digestToString(digest, digestHex);
+                printf("Test n.[%ld] \nDG: %s \nMD: %s\n", j, digestHex, MD);
+                assert(hashCompare256(digestHex, MD));
+                puts("PASS\n");
             }
             else
             {
@@ -68,35 +91,18 @@ int main()
  */
 void fromHexToByte(const char *src, size_t size, uint8_t *dest)
 {
-    char buff[2] = {0};
     size_t j = 0;
 
-    for (size_t i = 0; i < size; i += 2)
+    for (size_t i = 0; i < size; i++)
     {
-        buff[0] = src[i];
-        buff[1] = src[i + 1];
+        char buff[3] = {0};
+        j = i * 2;
+        buff[0] = src[j];
+        buff[1] = src[j + 1];
 
         uint8_t tmp = (uint8_t)strtol(buff, NULL, 16);
-        dest[j++] = tmp;
+        dest[i] = tmp;
     }
-}
-
-/**
- * @brief Extract the value in the current row
- *
- * @param src The row
- * @note
- * ```txt
- * Len = 8
- * ```
- * From this row it'll extract `8`
- */
-char *getValueFromRow(char *src)
-{
-    char *tokPtr = strtok(src, "=");
-    tokPtr = strtok(NULL, " ");
-
-    return tokPtr;
 }
 
 /**
@@ -111,6 +117,8 @@ char *getValueFromRow(char *src)
  * #  Generated on Tue Mar 15 08:23:38 2011
  * ```
  *
+ * @return 0 if it's ok. 1 if an error occurs.
+ *
  * At the 7th row we have
  *
  * ```txt
@@ -118,18 +126,21 @@ char *getValueFromRow(char *src)
  * ```
  * That represents the amount of the tests.
  */
-void readHeader(FILE *f)
+int readHeader(FILE *f)
 {
     char buffer[BUFF_SIZE] = {0};
-    for (size_t i = 0; i < 7; i++)
+    for (size_t i = 0; i < HEADERS_ROWS; i++)
     {
-        fgets(buffer, BUFF_SIZE, f);
-        if (buffer[0] == '#' && i < 4)
+        if (fgets(buffer, BUFF_SIZE, f) == NULL)
         {
-            printf("%s", buffer);
+            errno = EIO;
+            return 1;
         }
+
+        printf("%s", buffer);
     }
     printf("\n");
+    return 0;
 }
 /**
  * @brief Read a test from file
@@ -139,6 +150,8 @@ void readHeader(FILE *f)
  * @param MD MD
  * @param f The file
  *
+ * @return 0 if it's ok. 1 if an error occurs.
+ *
  * A test is composed by this structure
  *
  * ```txt
@@ -147,28 +160,36 @@ void readHeader(FILE *f)
  * MD = 28969cdfa74a12c82f3bad960b0b000aca2ac329deea5c2328ebc6f2ba9802c1
  * ```
  */
-void readTest(size_t *len, uint8_t *msg, char *MD, FILE *f)
+int readTest(size_t *len, uint8_t *msg, char *MD, FILE *f)
 {
-    char buffer[BUFF_SIZE] = {0};
-    char *tokPtr = NULL;
-
-    for (size_t i = 0; i < 3; i++)
+    for (size_t i = 0; i < TEST_BLOCK_ROWS; i++)
     {
-        fgets(buffer, BUFF_SIZE, f);
-        tokPtr = getValueFromRow(buffer);
+        char buffer[BUFF_SIZE] = {0};
+
+        if (fgets(buffer, BUFF_SIZE, f) == NULL)
+        {
+            errno = EIO;
+            return 1;
+        }
 
         switch (i)
         {
         case 0:
-            *len = strtol(tokPtr, NULL, 10);
-            continue;
+            *len = (size_t)strtol(buffer + ROW_DATA_OFFSET, NULL, 10);
+            break;
         case 1:
             /** In the test `msg` is expressed in hex*/
-            fromHexToByte(tokPtr, *len / 8, msg);
-            continue;
+            fromHexToByte(buffer + ROW_DATA_OFFSET, *len / 8, msg);
+            break;
         case 2:
-            strncpy(MD, tokPtr, 64);
+            strncpy(MD, buffer + ROW_DATA_OFFSET - 1, DGST_LENGTH);
+            /** To overwrite `\r` char at the end*/
+            MD[DGST_LENGTH - 1] = '\0';
+            break;
+        default:
+            break;
         }
     }
-    fgets(buffer, BUFF_SIZE, f);
+
+    return 0;
 }

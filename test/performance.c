@@ -5,22 +5,22 @@
 #include <stdint.h>
 #include <stdio.h>
 
-int main()
+int main(void)
 {
     clock_t start, end;
 
     int blockSizePow[] = {4, 6, 8, 10, 13, 14};
-    int blockSize = 0;
+    size_t blockSize = 0;
     uint8_t *randomData = NULL;
     double currentTimeExecution;
     int counter = 0;
 
     uint32_t result[65] = {0};
 
-    for (int i = 0; i < sizeof(blockSizePow) / sizeof(int); i++)
+    for (size_t i = 0; i < sizeof(blockSizePow) / sizeof(int); i++)
     {
-        blockSize = (int)pow(2, blockSizePow[i]);
-        randomData = (char *)malloc(blockSize);
+        blockSize = (size_t)pow(2, (double) blockSizePow[i]);
+        randomData = (uint8_t *)malloc(blockSize);
         counter = 0;
 
         start = clock();
@@ -39,11 +39,12 @@ int main()
                  *
                  *  @code: openssl speed -evp sha256
                  */
-                printf("Doing sha256 ops for 3s on %d size blocks: %d sha256 ops in 2.98s\n", blockSize, counter);
+                printf("Doing sha256 ops for 3s on %ld size blocks: %d sha256 ops in 2.98s\n", blockSize, counter);
                 break;
             }
         }
 
         free(randomData);
     }
+    return 0;
 }

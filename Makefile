@@ -6,7 +6,7 @@ TARGET = sha256
 PERFORMANCE_FILE = performance
 NIST_FILE = nist
 
-CFLAGS += -MD -MP -O2 -march=native
+CFLAGS += -MD -MP
 CFLAGS += $(WARNINGS)
 
 WARNINGS += -Wall -Wextra -Wwrite-strings
@@ -15,6 +15,8 @@ WARNINGS += -Wstrict-prototypes
 
 ifdef DEBUG
 CFLAGS += -g 
+else
+CFLAGS += -O2 -march=native
 endif
 
 ifdef PERFORMANCE

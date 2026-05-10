@@ -281,7 +281,7 @@ static void initConstants(uint32_t *H, uint32_t *K)
  *
  * @param msg input data
  * @param messageSize size of the input data
- * @param digest the result
+ * @param digest the result. It's an array of `uint32_t`, with length 8
  *
  * @return -1 if an error occurs,
  * 0 if everything is ok.
@@ -304,6 +304,8 @@ int sha256(const uint8_t *msg, size_t messageSize, uint32_t *digest)
     size_t paddedSize = nOfBlocks * BLOCK_SIZE_BYTES;
 
     uint8_t *data = (uint8_t *)malloc(paddedSize);
+    /** Set to zero to ensure clean data, and for the next padding operations */
+    memset(data, 0, paddedSize);
 
     if (!data)
     {
@@ -330,15 +332,32 @@ int sha256(const uint8_t *msg, size_t messageSize, uint32_t *digest)
 }
 
 /**
- * @brief Print the digest in string
- * 
+ * @brief Convert the digest of Sha256 from uint32_t array in string - with length 64 (i.e. DGST_LENGTH)
+ *
  * @param digest the digest
+ * @param dest destination string
  */
-void printDigest(uint32_t *digest)
+void digestToString(const uint32_t *digest, char *dest)
 {
     for (size_t i = 0; i < 8; i++)
     {
-        printf("%08x", digest[i]);
+        sprintf(dest + i * 8, "%08x", digest[i]);
     }
-    printf("\n");
+}
+
+/**
+ * @brief Compare 2 hash strings in Sha256.
+ * 
+ * @return true if they are equals, false if they aren't
+ */
+bool hashCompare256(const char *str1, const char *str2)
+{
+    bool res = true;
+    for (size_t i = 0; i < DGST_LENGTH; i++)
+    {   
+        /** For timing side channels, it'll be executed for the total length */
+        if(str1[i] != str2[i])
+            res = false;
+    }
+    return res;
 }

@@ -28,9 +28,12 @@ int main(int argc, char **argv)
 
     const uint8_t *msg = (uint8_t *)argv[1];
     uint32_t digest[8] = {0};
+    char digestHex[DGST_LENGTH] = {0};
 
-    if (!sha256(msg, strlen(argv[1]), digest))
-        printDigest(digest);
+    if (!sha256(msg, strlen(argv[1]), digest)){
+        digestToString(digest, digestHex);
+        printf("%s\n", digestHex);
+    }
     else
     {
         fprintf(stderr, "Error with %s: %s\n", PROGRAM, strerror(errno));
