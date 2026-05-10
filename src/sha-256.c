@@ -286,10 +286,7 @@ static void initConstants(uint32_t *H, uint32_t *K)
  * @return -1 if an error occurs,
  * 0 if everything is ok.
  *
- * @note I've received suggestions about the SHA256 APIs form in many libraries.
- * This implementations have an init function, calcultate function, and cleaning function
- * - to ensure that every dimension input is possible processed -.
- * With this approach I don't need to malloc the `input` data, and obvisously it there would more efficient.
+ * @note Set `errno` to `ENOMEM` if there's an allocation issue
  *
  */
 int sha256(const uint8_t *msg, size_t messageSize, uint32_t *digest)

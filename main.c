@@ -12,11 +12,9 @@
 
 #define PROGRAM "sha256"
 
-
 /**
  * @note This program is just an example of the algorithm implementation, and handles
  * only string inputs.
- * 
  */
 int main(int argc, char **argv)
 {
@@ -30,15 +28,14 @@ int main(int argc, char **argv)
     uint32_t digest[8] = {0};
     char digestHex[DGST_LENGTH] = {0};
 
-    if (!sha256(msg, strlen(argv[1]), digest)){
-        digestToString(digest, digestHex);
-        printf("%s\n", digestHex);
-    }
-    else
+    if (sha256(msg, strlen(argv[1]), digest))
     {
         fprintf(stderr, "Error with %s: %s\n", PROGRAM, strerror(errno));
         return 1;
     }
+
+    digestToString(digest, digestHex);
+    printf("%s\n", digestHex);
 
     return 0;
 }

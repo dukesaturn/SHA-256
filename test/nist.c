@@ -6,10 +6,29 @@
 #include "../src/sha-256.h"
 #include <assert.h>
 
-#define BUFF_SIZE 600
 #define ROW_DATA_OFFSET 6
 #define HEADERS_ROWS 7
 #define TEST_BLOCK_ROWS 4
+#define BUFFER_SIZE 128
+#define RETURN_ERROR_AND_CLEAN                                               \
+    free(msg);                                                               \
+    fprintf(stderr, ":%d:%s : %s", __LINE__, filePaths[i], strerror(errno)); \
+    return 1;
+
+#define RETURN_ERROR                                        \
+    fprintf(stderr, ":%d : %s", __LINE__, strerror(errno)); \
+    return 1;
+
+/**
+ * @note The most long Message length, from `SHA256LongMsg.rsp`
+ *
+ * ```txt
+ *   Len = 51200
+ *   Msg = 37ebe98ef52bfb240b9ad3691...
+ *   MD = 33b6229592ca719e4e46f35b287617fedadd3b7c38be3c8c1c9f446d2d9085b3
+ * ```
+ */
+#define MAX_MSG_LENGTH_IN_RSP 51200 / 8
 
 void fromHexToByte(const char *src, size_t size, uint8_t *dest);
 int readHeader(FILE *f);
@@ -20,26 +39,40 @@ int main(void)
     /** For SHA256 we have these tests */
     const char *filePaths[] = {"test/shavs/SHA256ShortMsg.rsp", "test/shavs/SHA256LongMsg.rsp"};
 
-    for (size_t i = 0; i < 1; i++)
+    /** Iterations, read by the tests */
+    size_t L = 32;
+
+    size_t len = 0;
+    uint8_t *msg = (uint8_t *)malloc(MAX_MSG_LENGTH_IN_RSP);
+
+    if (!msg)
+    {
+        RETURN_ERROR;
+    }
+
+    char MD[DGST_LENGTH] = {0};
+
+    uint32_t digest[8] = {0};
+    char digestHex[DGST_LENGTH] = {0};
+
+    for (size_t i = 0; i < 2; i++)
     {
         FILE *rspFile = fopen(filePaths[i], "r");
 
         if (!rspFile)
         {
-            fprintf(stderr, "%s : %s\n", filePaths[i], strerror(errno));
-            return 1;
+            RETURN_ERROR_AND_CLEAN;
         }
 
         if (readHeader(rspFile))
         {
-            fprintf(stderr, "%s : %s", filePaths[i], strerror(errno));
-            return 1;
+            fclose(rspFile);
+            RETURN_ERROR_AND_CLEAN;
         }
-
-        size_t L = 32;
 
         for (size_t j = 0; j < L; j++)
         {
+            memset(msg, 0, MAX_MSG_LENGTH_IN_RSP);
             /** Data taken from test
              *
              * @note Len is expressed in bits, but, in the implementation, the parameter is the amount of byte.
@@ -50,34 +83,26 @@ int main(void)
              *
              *```
              */
-            size_t len = 0;
-            uint8_t msg[BUFF_SIZE] = {0};
-            char MD[DGST_LENGTH] = {0};
             if (readTest(&len, msg, MD, rspFile))
             {
-                fprintf(stderr, "%s : %s", filePaths[i], strerror(errno));
-                return 1;
-            }
-
-            uint32_t digest[8] = {0};
-            char digestHex[DGST_LENGTH] = {0};
-
-            if (!sha256(msg, len / 8, digest))
-            {
-                digestToString(digest, digestHex);
-                printf("Test n.[%ld] \nDG: %s \nMD: %s\n", j, digestHex, MD);
-                assert(hashCompare256(digestHex, MD));
-                puts("PASS\n");
-            }
-            else
-            {
-                fprintf(stderr, "%s : %s", __FILE_NAME__, strerror(errno));
                 fclose(rspFile);
-                return 1;
+                RETURN_ERROR_AND_CLEAN;
             }
+
+            if (sha256(msg, len / 8, digest))
+            {
+                fclose(rspFile);
+                RETURN_ERROR_AND_CLEAN;
+            }
+
+            digestToString(digest, digestHex);
+            printf("Test n.[%ld] \nDG: %s \nMD: %s\n", j, digestHex, MD);
+            assert(hashCompare256(digestHex, MD));
         }
         fclose(rspFile);
     }
+
+    free(msg);
 
     return 0;
 }
@@ -125,13 +150,16 @@ void fromHexToByte(const char *src, size_t size, uint8_t *dest)
  * [L = 32]
  * ```
  * That represents the amount of the tests.
+ *
+ * @note Set `errno` to `EIO` if it can't read a row in the header.
  */
 int readHeader(FILE *f)
 {
-    char buffer[BUFF_SIZE] = {0};
+    char buffer[BUFFER_SIZE] = {0};
+
     for (size_t i = 0; i < HEADERS_ROWS; i++)
     {
-        if (fgets(buffer, BUFF_SIZE, f) == NULL)
+        if (!fgets(buffer, BUFFER_SIZE, f))
         {
             errno = EIO;
             return 1;
@@ -152,6 +180,8 @@ int readHeader(FILE *f)
  *
  * @return 0 if it's ok. 1 if an error occurs.
  *
+ * @note Set `errno` to `EIO` if it can't read a row in the test.
+ *
  * A test is composed by this structure
  *
  * ```txt
@@ -159,14 +189,17 @@ int readHeader(FILE *f)
  * Msg = d3
  * MD = 28969cdfa74a12c82f3bad960b0b000aca2ac329deea5c2328ebc6f2ba9802c1
  * ```
+ * 
+ * @todo: an implementation with `regex`?
  */
 int readTest(size_t *len, uint8_t *msg, char *MD, FILE *f)
 {
+    char buffer[BUFFER_SIZE] = {0};
+
     for (size_t i = 0; i < TEST_BLOCK_ROWS; i++)
     {
-        char buffer[BUFF_SIZE] = {0};
 
-        if (fgets(buffer, BUFF_SIZE, f) == NULL)
+        if (!fgets(buffer, BUFFER_SIZE, f))
         {
             errno = EIO;
             return 1;
