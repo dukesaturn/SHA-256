@@ -62,4 +62,7 @@ make NIST=1
 ## Docs
 
 Here you can see the original NIST [paper](docs/nist.fips.180-4.pdf)
-Here my optimization journey [optimization](docs/Optimization.md)
+
+Here my [optimization](docs/Optimization.md) journey
+
+Here the [algorithym](docs/Algorithm.md) explanation
