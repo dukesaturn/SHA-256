@@ -9,7 +9,7 @@
 #define ROW_DATA_OFFSET 6
 #define HEADERS_ROWS 7
 #define TEST_BLOCK_ROWS 4
-#define BUFFER_SIZE 600
+#define BUFFER_SIZE 128
 #define RETURN_ERROR                                          \
     fprintf(stderr, ":%d : %s\n", __LINE__, strerror(errno)); \
     return 1;
