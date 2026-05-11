@@ -42,12 +42,16 @@ static void padding(uint8_t *block, size_t messageSize, size_t paddedSize)
 {
     block[messageSize] = 0x80;
 
-    uint64_t l = messageSize * 8;
+    size_t l = messageSize * 8;
 
-    block[paddedSize - 1] = l & 0xFF;
-    block[paddedSize - 2] = (l & 0xFF00) >> BYTE_IN_BITS;
-    block[paddedSize - 3] = (l & 0xFF0000) >> (BYTE_IN_BITS * 2);
-    block[paddedSize - 4] = (l & 0xFF000000) >> (BYTE_IN_BITS * 3);
+    block[paddedSize - 1] = (uint8_t)(l & 0xFF);
+    block[paddedSize - 2] = (uint8_t)((l & 0xFF00) >> BYTE_IN_BITS);
+    block[paddedSize - 3] = (uint8_t)((l & 0xFF0000) >> (BYTE_IN_BITS * 2));
+    block[paddedSize - 4] = (uint8_t)((l & 0xFF000000) >> (BYTE_IN_BITS * 3));
+    block[paddedSize - 5] = (uint8_t)((l & 0xFF00000000) >> (BYTE_IN_BITS * 4));
+    block[paddedSize - 6] = (uint8_t)((l & 0xFF0000000000) >> (BYTE_IN_BITS * 5));
+    block[paddedSize - 7] = (uint8_t)((l & 0xFF000000000000) >> (BYTE_IN_BITS * 6));
+    block[paddedSize - 8] = (uint8_t)((l & 0xFF00000000000000) >> (BYTE_IN_BITS * 7));
 }
 
 /**
@@ -270,6 +274,12 @@ static uint32_t KBluePrint[K_LEN] = {0x428a2f98, 0x71374491, 0xb5c0fbcf, 0xe9b5d
                                      0x748f82ee, 0x78a5636f, 0x84c87814, 0x8cc70208,
                                      0x90befffa, 0xa4506ceb, 0xbef9a3f7, 0xc67178f2};
 
+/**
+ * @brief Init Costants H and K in the `sha256` algorithm
+ * 
+ * @param H constants array
+ * @param K constants array
+ */
 static void initConstants(uint32_t *H, uint32_t *K)
 {
     memcpy(H, HBluePrint, H_LEN * 4);
@@ -283,7 +293,7 @@ static void initConstants(uint32_t *H, uint32_t *K)
  * @param messageSize size of the input data
  * @param digest the result. It's an array of `uint32_t`, with length 8
  *
- * @return -1 if an error occurs,
+ * @return 1 if an error occurs,
  * 0 if everything is ok.
  *
  * @note Set `errno` to `ENOMEM` if there's an allocation issue
@@ -307,7 +317,7 @@ int sha256(const uint8_t *msg, size_t messageSize, uint32_t *digest)
     if (!data)
     {
         errno = ENOMEM;
-        return -1;
+        return 1;
     }
 
     memcpy(data, msg, messageSize);
@@ -318,7 +328,7 @@ int sha256(const uint8_t *msg, size_t messageSize, uint32_t *digest)
     for (size_t i = 0; i < nOfBlocks; i++)
     {
         /** 64 words of 32-bit: first 16 copied, remaining 48 generated */
-        generateWords(words, data);
+        generateWords(words, data+(i*BLOCK_SIZE_BYTES));
         compressionRounds(H, K, words);
     }
 
@@ -342,19 +352,3 @@ void digestToString(const uint32_t *digest, char *dest)
     }
 }
 
-/**
- * @brief Compare 2 hash strings in Sha256.
- * 
- * @return true if they are equals, false if they aren't
- */
-bool hashCompare256(const char *str1, const char *str2)
-{
-    bool res = true;
-    for (size_t i = 0; i < DGST_LENGTH; i++)
-    {   
-        /** For timing side channels, it'll be executed for the total length */
-        if(str1[i] != str2[i])
-            res = false;
-    }
-    return res;
-}

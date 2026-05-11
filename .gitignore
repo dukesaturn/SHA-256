@@ -8,3 +8,4 @@ nist
 sha256.d
 nist.d
 performance.d
+.vscode
