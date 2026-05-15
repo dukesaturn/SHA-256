@@ -187,28 +187,33 @@ static void messageSchedule(uint32_t *dest, uint8_t *src)
 First of all we have 8 state variables, that, for the first block, are equal to the constants `H`.
 
 $$
-     a = H[0] \\
-     b = H[1] \\
-     c = H[2] \\
-     d = H[3] \\
-     e = H[4] \\
-     f = H[5] \\
-     g = H[6] \\
+     a = H[0], \\
+     b = H[1], \\
+     c = H[2], \\
+     d = H[3], \\
+     e = H[4], \\
+     f = H[5], \\
+     g = H[6], \\
      h = H[7] 
 $$
 
 We'll apply this transformation 64 times, one for each generated word
 
 $$
-T1 = h + Σ1(e) + Ch(e,f,g) + K[i] + W[i] \\
-T2 = Σ0(a) + Maj(a,b,c) \\[10pt]
-h = g \\
-g = f \\
-f = e \\
-e = d + T1 \\
-d = c \\
-c = b \\
-b = a \\
+T1 = h + Σ1(e) + Ch(e,f,g) + K[i] + W[i]
+$$
+$$
+T2 = Σ0(a) + Maj(a,b,c), \\[10pt]
+$$
+
+$$
+h = g, \\
+g = f, \\
+f = e, \\
+e = d + T1, \\
+d = c, \\
+c = b, \\
+b = a, \\
 a = T1 + T2
 $$
 
@@ -285,13 +290,13 @@ static void compressionRounds(uint32_t *H, uint32_t *K, uint32_t *expandedWords)
 At the end of the 64 rounds we'll update the state variables
 
 $$
-H[0] += a \\
-H[1] += b \\
-H[2] += c \\
-H[3] += d \\
-H[4] += e \\
-H[5] += f \\
-H[6] += g \\
+H[0] += a, \\
+H[1] += b, \\
+H[2] += c, \\
+H[3] += d, \\
+H[4] += e, \\
+H[5] += f, \\
+H[6] += g, \\
 H[7] += h 
 $$
 
