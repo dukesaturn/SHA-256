@@ -3,11 +3,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
-#include <stdbool.h>
-#include <assert.h>
 #include <string.h>
-#include <limits.h>
-#include <errno.h>
+
 
 #define H_LEN 8
 #define K_LEN 64

@@ -3,7 +3,6 @@
 
 #include <stdlib.h>
 #include <stdint.h>
-#include <stdbool.h>
 
 /** The length, in chars, of the digest in string */
 #define DGST_LENGTH 65

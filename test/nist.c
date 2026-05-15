@@ -3,7 +3,6 @@
 #include <errno.h>
 #include <string.h>
 #include <stdint.h>
-#include <assert.h>
 #include "../src/sha-256.h"
 
 #define ROW_DATA_OFFSET 6
