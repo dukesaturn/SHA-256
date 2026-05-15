@@ -293,10 +293,9 @@ static void initConstants(uint32_t *H, uint32_t *K)
  * @param messageSize size of the input data
  * @param digest the result. It's an array of `uint32_t`, with length 8
  *
- * @return 1 if an error occurs,
+ * @return -1 if an error occurs,
  * 0 if everything is ok.
  *
- * @note Set `errno` to `ENOMEM` if there's an allocation issue
  *
  */
 int sha256(const uint8_t *msg, size_t messageSize, uint32_t *digest)
@@ -316,8 +315,7 @@ int sha256(const uint8_t *msg, size_t messageSize, uint32_t *digest)
 
     if (!data)
     {
-        errno = ENOMEM;
-        return 1;
+        return -1;
     }
 
     memcpy(data, msg, messageSize);

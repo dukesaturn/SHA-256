@@ -172,7 +172,6 @@ void fromHexToByte(const char *src, size_t size, uint8_t *dest)
  *
  * @return 0 if it's ok. 1 if an error occurs.
  *
- * @note Set `errno` to `EIO` if it can't read a row in the header.
  */
 int skipHeader(FILE *f)
 {
@@ -182,8 +181,7 @@ int skipHeader(FILE *f)
     {
         if (!fgets(buffer, BUFFER_SIZE, f))
         {
-            errno = EIO;
-            return 1;
+            return -1;
         }
     }
 
@@ -198,9 +196,8 @@ int skipHeader(FILE *f)
  * @param f The file
  * @param buffer The buffer in which the test informations are read. The length must be long enough to read the Msg line.
  *
- * @return 0 if it's ok. 1 if an error occurs.
+ * @return 0 if it's ok. -1 if an error occurs.
  *
- * @note Set `errno` to `EIO` if it can't read a row in the test.
  *
  * A test is composed by this structure
  *
@@ -210,7 +207,6 @@ int skipHeader(FILE *f)
  * MD = 28969cdfa74a12c82f3bad960b0b000aca2ac329deea5c2328ebc6f2ba9802c1
  * ```
  *
- * @todo: an implementation with `regex`?
  */
 int readTest(size_t *len, uint8_t *msg, char *MD, FILE *f, char *buffer)
 {
@@ -220,8 +216,7 @@ int readTest(size_t *len, uint8_t *msg, char *MD, FILE *f, char *buffer)
         memset(buffer, 0, MAX_MSG_LENGTH_IN_HEX);
         if (!fgets(buffer, MAX_MSG_LENGTH_IN_HEX, f))
         {
-            errno = EIO;
-            return 1;
+            return -1;
         }
 
         switch (i)
