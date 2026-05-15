@@ -183,7 +183,7 @@ static inline uint32_t maj(uint32_t a, uint32_t b, uint32_t c)
  *
  * $W[i] = W[i-16] + σ0(W[i-15]) + W[i-7] + σ1(W[i-2])$
  */
-static void generateWords(uint32_t *dest, uint8_t *src)
+static void messageSchedule(uint32_t *dest, uint8_t *src)
 {
     memcpy(dest, src, BLOCK_SIZE_BYTES);
     convertInBigEndian(dest);
@@ -328,7 +328,7 @@ int sha256(const uint8_t *msg, size_t messageSize, uint32_t *digest)
     for (size_t i = 0; i < nOfBlocks; i++)
     {
         /** 64 words of 32-bit: first 16 copied, remaining 48 generated */
-        generateWords(words, data+(i*BLOCK_SIZE_BYTES));
+        messageSchedule(words, data+(i*BLOCK_SIZE_BYTES));
         compressionRounds(H, K, words);
     }
 
