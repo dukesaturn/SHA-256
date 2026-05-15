@@ -67,8 +67,8 @@ in which we write, as an integer of 64 bits, the length of the message.
 
 This is an example of "Hello world!" string.
 In the first 12 bytes we have the corresponding bytes. 
-At the position 13, in green, we have the bit 1.
-At the end, in orange, the length expressed in bits (96 in decimal, 0x60 in hex):
+At the position 13,  we have the bit 1.
+At the end, the length expressed in bits (96 in decimal, 0x60 in hex):
 
 #### Message
 
@@ -87,22 +87,22 @@ $$
 $$
 \left|
 \begin{array}{cccccccccccccccc}
-\textcolor{cyan}{\texttt{0x48}} & \textcolor{cyan}{\texttt{0x65}} & \textcolor{cyan}{\texttt{0x6C}} & \textcolor{cyan}{\texttt{0x6C}} &
-\textcolor{cyan}{\texttt{0x6F}} & \textcolor{cyan}{\texttt{0x20}} & \textcolor{cyan}{\texttt{0x77}} & \textcolor{cyan}{\texttt{0x6F}} &
-\textcolor{cyan}{\texttt{0x72}} & \textcolor{cyan}{\texttt{0x6C}} & \textcolor{cyan}{\texttt{0x64}} & \textcolor{cyan}{\texttt{0x21}} &
-\textcolor{lime}{\texttt{0x80}} & \texttt{0x00} & \texttt{0x00} & \texttt{0x00} \\
+\texttt{0x48} & \texttt{0x65} & \texttt{0x6C} & \texttt{0x6C} &
+\texttt{0x6F} & \texttt{0x20} & \texttt{0x77} & \texttt{0x6F} &
+\texttt{0x72} & \texttt{0x6C} & \texttt{0x64} & \texttt{0x21} &
+\texttt{0x80} & \texttt{0x00} & \texttt{0x00} & \texttt{0x00} \\
 \texttt{0x00} & \texttt{0x00} & \texttt{0x00} & \texttt{0x00} &
 \texttt{0x00} & \texttt{0x00} & \texttt{0x00} & \texttt{0x00} &
 \texttt{0x00} & \texttt{0x00} & \texttt{0x00} & \texttt{0x00} &
 \texttt{0x00} & \texttt{0x00} & \texttt{0x00} & \texttt{0x00} \\
 \texttt{0x00} & \texttt{0x00} & \texttt{0x00} & \texttt{0x00} &
 \texttt{0x00} & \texttt{0x00} & \texttt{0x00} & \texttt{0x00} &
-\texttt{0x00} & \texttt{0x00} & \texttt{0x00} & \texttt{0x00} & 
-\texttt{0x00} & \texttt{0x00} & \texttt{0x00} & \texttt{0x00}\\
-\texttt{0x00} & \texttt{0x00} & \texttt{0x00} & \texttt{0x00} & 
 \texttt{0x00} & \texttt{0x00} & \texttt{0x00} & \texttt{0x00} &
-\textcolor{orange}{\texttt{0x00}} & \textcolor{orange}{\texttt{0x00}} & \textcolor{orange}{\texttt{0x00}} & \textcolor{orange}{\texttt{0x00}} &
-\textcolor{orange}{\texttt{0x00}} & \textcolor{orange}{\texttt{0x00}} & \textcolor{orange}{\texttt{0x00}} & \textcolor{orange}{\texttt{0x60}}
+\texttt{0x00} & \texttt{0x00} & \texttt{0x00} & \texttt{0x00} \\
+\texttt{0x00} & \texttt{0x00} & \texttt{0x00} & \texttt{0x00} &
+\texttt{0x00} & \texttt{0x00} & \texttt{0x00} & \texttt{0x00} &
+\texttt{0x00} & \texttt{0x00} & \texttt{0x00} & \texttt{0x00} &
+\texttt{0x00} & \texttt{0x00} & \texttt{0x00} & \texttt{0x60}
 \end{array}
 \right|
 $$
