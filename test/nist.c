@@ -67,7 +67,7 @@ int main(void)
 
     char MD[DGST_LENGTH] = {0};
 
-    uint32_t digest[8] = {0};
+    uint8_t digest[DGST_IN_BYTES] = {0};
     char digestHex[DGST_LENGTH] = {0};
 
     char *buffer = (char *)malloc(MAX_MSG_LENGTH_IN_HEX);

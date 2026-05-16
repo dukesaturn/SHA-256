@@ -4,6 +4,8 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <stdio.h>
+#include <errno.h>
+#include <string.h>
 
 int main(void)
 {
@@ -15,25 +17,36 @@ int main(void)
     double currentTimeExecution;
     int counter = 0;
 
-    uint32_t result[65] = {0};
+    uint8_t result[DGST_IN_BYTES] = {0};
 
     for (size_t i = 0; i < sizeof(blockSizePow) / sizeof(int); i++)
     {
-        blockSize = (size_t)pow(2, (double) blockSizePow[i]);
+        blockSize = (size_t)pow(2, (double)blockSizePow[i]);
         randomData = (uint8_t *)malloc(blockSize);
+
+        if (!randomData)
+        {
+            fprintf(stderr, "%s\n", strerror(errno));
+            return 1;
+        }
+
         counter = 0;
 
         start = clock();
 
         while (1)
         {
-            sha256(randomData, blockSize, result);
+            if (sha256(randomData, blockSize, result))
+            {
+                free(randomData);
+                fprintf(stderr, "%s\n", strerror(errno));
+                return 1;
+            }
 
             end = clock();
             currentTimeExecution = (double)(end - start) / CLOCKS_PER_SEC;
-            counter++;
 
-            if (currentTimeExecution >= 3)
+            if (currentTimeExecution > 3)
             {
                 /** It's the Openssl format
                  *
@@ -42,6 +55,7 @@ int main(void)
                 printf("Doing sha256 ops for 3s on %ld size blocks: %d sha256 ops in 2.98s\n", blockSize, counter);
                 break;
             }
+            counter++;
         }
 
         free(randomData);

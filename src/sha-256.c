@@ -15,7 +15,7 @@
 #define UINT32_BITS 32
 #define BYTE_IN_BITS 8
 
-static void convertInBigEndian(uint32_t *block)
+static void convertBlockInBigEndian(uint32_t *block)
 {
     for (size_t i = 0; i < 16; i++)
     {
@@ -183,7 +183,7 @@ static inline uint32_t maj(uint32_t a, uint32_t b, uint32_t c)
 static void messageSchedule(uint32_t *dest, uint8_t *src)
 {
     memcpy(dest, src, BLOCK_SIZE_BYTES);
-    convertInBigEndian(dest);
+    convertBlockInBigEndian(dest);
 
     for (size_t i = WORDS_LENGTH; i < EXPANDED_WORDS_LENGTH; i++)
     {
@@ -288,14 +288,14 @@ static void initConstants(uint32_t *H, uint32_t *K)
  *
  * @param msg input data
  * @param messageSize size of the input data
- * @param digest the result. It's an array of `uint32_t`, with length 8
+ * @param digest the result. It's an array of `uint8_t`, with length 32
  *
  * @return -1 if an error occurs,
  * 0 if everything is ok.
  *
  *
  */
-int sha256(const uint8_t *msg, size_t messageSize, uint32_t *digest)
+int sha256(const uint8_t *msg, size_t messageSize, uint8_t *digest)
 {
     uint32_t H[H_LEN];
     uint32_t K[K_LEN];
@@ -327,6 +327,8 @@ int sha256(const uint8_t *msg, size_t messageSize, uint32_t *digest)
         compressionRounds(H, K, words);
     }
 
+    /** If the block is in little endian.. */
+    convertBlockInBigEndian(H);
     memcpy(digest, H, H_LEN * 4);
 
     free(data);
@@ -334,16 +336,16 @@ int sha256(const uint8_t *msg, size_t messageSize, uint32_t *digest)
 }
 
 /**
- * @brief Convert the digest of Sha256 from uint32_t array in string - with length 64 (i.e. DGST_LENGTH)
+ * @brief Convert the digest of Sha256 from uint8_t array in string - with length 64 (i.e. DGST_LENGTH)
  *
  * @param digest the digest
  * @param dest destination string
  */
-void digestToString(const uint32_t *digest, char *dest)
+void digestToString(const uint8_t *digest, char *dest)
 {
-    for (size_t i = 0; i < 8; i++)
+    for (size_t i = 0; i < DGST_IN_BYTES; i++)
     {
-        sprintf(dest + i * 8, "%08x", digest[i]);
+        sprintf(dest + i * 2, "%02x", digest[i]);
     }
 }
 

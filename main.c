@@ -25,7 +25,7 @@ int main(int argc, char **argv)
     }
 
     const uint8_t *msg = (uint8_t *)argv[1];
-    uint32_t digest[8] = {0};
+    uint8_t digest[DGST_IN_BYTES] = {0};
     char digestHex[DGST_LENGTH] = {0};
 
     if (sha256(msg, strlen(argv[1]), digest))
